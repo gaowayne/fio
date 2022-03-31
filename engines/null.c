@@ -209,6 +209,9 @@ struct NullData {
 
 	int fio_null_open(struct thread_data *, struct fio_file *f)
 	{
+//        int p = 0;
+//        	printf("Enter init in null: ");
+//        	scanf("%d", &p);
 		return null_open(impl_, f);
 	}
 
@@ -246,6 +249,10 @@ static int fio_null_open(struct thread_data *td, struct fio_file *f)
 
 static int fio_null_init(struct thread_data *td)
 {
+	                int p = 0;
+                printf("Enter init in null: ");
+                scanf("%d", &p);
+
 	td->io_ops_data = new NullData(td);
 	return 0;
 }
