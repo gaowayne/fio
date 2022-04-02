@@ -251,6 +251,7 @@ static int fio_null_init(struct thread_data *td)
 {
 	                int p = 0;
                 printf("Enter init in null: ");
+		sleep(10);
                 scanf("%d", &p);
 
 	td->io_ops_data = new NullData(td);
