@@ -186,6 +186,8 @@ void func(int i) {
 }
 void worker_thread() {
 	service.run();
+	// wait for all threads to be created
+	boost::this_thread::sleep(boost::posix_time::millisec(10000));
 }
 
 struct NullData {
@@ -231,6 +233,7 @@ struct NullData {
 	{
 		threads.create_thread(worker_thread);
 
+		service.post(boost::bind(func, 150));
 		return null_open(impl_, f);
 	}
 
@@ -277,6 +280,9 @@ static int fio_null_init(struct thread_data *td)
                 printf("Enter init in null: ");
 		sleep(10);
                 scanf("%d", &p);
+
+	for (int i = 90; i < 100; ++i)
+		service.post(boost::bind(func, i));
 
 	td->io_ops_data = new NullData(td);
 	return 0;
