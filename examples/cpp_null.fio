@@ -6,5 +6,6 @@ gtod_reduce=1
 ioengine=cpp_null
 size=100g
 rw=randread
+iodepth=128
 norandommap
 time_based

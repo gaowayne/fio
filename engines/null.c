@@ -16,8 +16,16 @@
  */
 #include <stdlib.h>
 #include <assert.h>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
+#include <boost/asio.hpp>
+#include <iostream>
 
 #include "../fio.h"
+
+#define FIO_EXTERNAL_ENGINE 1
+
+using namespace boost::asio;
 
 struct null_data {
 	struct io_u **io_us;
@@ -100,6 +108,8 @@ static struct null_data *null_init(struct thread_data *td)
 	return nd;
 }
 
+#define __cplusplus 1
+
 #ifndef __cplusplus
 
 static struct io_u *fio_null_event(struct thread_data *td, int event)
@@ -169,6 +179,15 @@ static void fio_exit fio_null_unregister(void)
 
 #ifdef FIO_EXTERNAL_ENGINE
 
+io_service service;
+
+void func(int i) {
+	std::cout << "func called, i= " << i << std::endl;
+}
+void worker_thread() {
+	service.run();
+}
+
 struct NullData {
 	NullData(struct thread_data *td)
 	{
@@ -204,19 +223,24 @@ struct NullData {
 
 	fio_q_status fio_null_queue(struct thread_data *td, struct io_u *io_u)
 	{
+		service.post(boost::bind(func, 15));//reinterpret_cast<int>(io_u)
 		return null_queue(td, impl_, io_u);
 	}
 
 	int fio_null_open(struct thread_data *, struct fio_file *f)
 	{
-//        int p = 0;
-//        	printf("Enter init in null: ");
-//        	scanf("%d", &p);
+		threads.create_thread(worker_thread);
+
 		return null_open(impl_, f);
 	}
 
+public:
+
+	boost::thread_group threads;
+
 private:
 	struct null_data *impl_;
+
 };
 
 extern "C" {
