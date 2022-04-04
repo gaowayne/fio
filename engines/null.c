@@ -184,6 +184,19 @@ io_service service;
 void func(int i) {
 	std::cout << "func called, i= " << i << std::endl;
 }
+
+void asio_queue_io(struct null_data* nd, struct io_u* io_u) {
+	if (nd && io_u)
+	{
+		//nd->io_us[nd->queued++] = io_u;
+		std::cout << "asio_queue_io, queued= " << nd->queued << std::endl;
+	}
+	else
+	{
+		std::cout << "wayne nd=0 io_u=0 called, i= " << std::endl;
+	}
+}
+
 void worker_thread() {
 	service.run();
 	// wait for all threads to be created
@@ -225,15 +238,26 @@ struct NullData {
 
 	fio_q_status fio_null_queue(struct thread_data *td, struct io_u *io_u)
 	{
-		service.post(boost::bind(func, 15));//reinterpret_cast<int>(io_u)
-		return null_queue(td, impl_, io_u);
+		//service.post(boost::bind(func, 15));//reinterpret_cast<int>(io_u)
+		//return null_queue(td, impl_, io_u);
+		struct null_data* nd = (struct null_data*)impl_;
+		fio_ro_check(td, io_u);
+
+		if (td->io_ops->flags & FIO_SYNCIO)
+			return FIO_Q_COMPLETED;
+		if (nd->events)// if > qd then it is busy let us use qd=128
+			return FIO_Q_BUSY;
+
+		nd->io_us[nd->queued++] = io_u;
+		service.post(boost::bind(asio_queue_io, nd, io_u));
+		return FIO_Q_QUEUED;
 	}
 
 	int fio_null_open(struct thread_data *, struct fio_file *f)
 	{
 		threads.create_thread(worker_thread);
 
-		service.post(boost::bind(func, 150));
+		service.post(boost::bind(asio_queue_io, (null_data*)0, (io_u*)0));
 		return null_open(impl_, f);
 	}
 
@@ -281,8 +305,8 @@ static int fio_null_init(struct thread_data *td)
 		sleep(10);
                 scanf("%d", &p);
 
-	for (int i = 90; i < 100; ++i)
-		service.post(boost::bind(func, i));
+	for (int i = 80; i < 100; ++i)
+		service.post(boost::bind(asio_queue_io, (null_data*)0, (io_u*)0));
 
 	td->io_ops_data = new NullData(td);
 	return 0;
