@@ -45,25 +45,29 @@ static int null_getevents(struct null_data *nd, unsigned int min_events,
 	int ret = 0;
 
 	if (min_events) {
+		nd->events = nd->queued;// give all queued into events wayne
+
 		ret = nd->events;
 		nd->events = 0;
+
+		nd->queued = 0;//removed queued at once wayne
 	}
 
 	return ret;
 }
 
-static int null_commit(struct thread_data *td, struct null_data *nd)
-{
-	if (!nd->events) {
-#ifndef FIO_EXTERNAL_ENGINE
-		io_u_mark_submit(td, nd->queued);
-#endif
-		nd->events = nd->queued;
-		nd->queued = 0;
-	}
-
-	return 0;
-}
+//static int null_commit(struct thread_data *td, struct null_data *nd)
+//{
+//	if (!nd->events) {
+//#ifndef FIO_EXTERNAL_ENGINE
+//		io_u_mark_submit(td, nd->queued);
+//#endif
+//		nd->events = nd->queued;
+//		nd->queued = 0;
+//	}
+//
+//	return 0;
+//}
 
 static enum fio_q_status null_queue(struct thread_data *td,
 				    struct null_data *nd, struct io_u *io_u)
@@ -233,7 +237,7 @@ struct NullData {
 
 	int fio_null_commit(struct thread_data *td)
 	{
-		return null_commit(td, impl_);
+		return 0;// null_commit(td, impl_);
 	}
 
 	fio_q_status fio_null_queue(struct thread_data *td, struct io_u *io_u)
@@ -285,7 +289,8 @@ static int fio_null_getevents(struct thread_data *td, unsigned int min_events,
 
 static int fio_null_commit(struct thread_data *td)
 {
-	return NullData::get(td)->fio_null_commit(td);
+	//return NullData::get(td)->fio_null_commit(td);
+	return 0;
 }
 
 static fio_q_status fio_null_queue(struct thread_data *td, struct io_u *io_u)
@@ -325,13 +330,13 @@ void get_ioengine(struct ioengine_ops **ioengine_ptr)
 	ioengine.name           = "cpp_null";
 	ioengine.version        = FIO_IOOPS_VERSION;
 	ioengine.queue          = fio_null_queue;
-	ioengine.commit         = fio_null_commit;
+	//ioengine.commit         = fio_null_commit;
 	ioengine.getevents      = fio_null_getevents;
 	ioengine.event          = fio_null_event;
 	ioengine.init           = fio_null_init;
 	ioengine.cleanup        = fio_null_cleanup;
 	ioengine.open_file      = fio_null_open;
-	ioengine.flags          = FIO_DISKLESSIO | FIO_FAKEIO;
+	ioengine.flags          = FIO_DISKLESSIO | FIO_FAKEIO | FIO_ASYNCIO_SYNC_TRIM;
 }
 }
 #endif /* FIO_EXTERNAL_ENGINE */
