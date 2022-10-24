@@ -1,0 +1,15 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "任务-fio",
+      "appliesTo": "/",
+      "type": "launch"
+    },
+    {
+      "taskLabel": "任务-null",
+      "appliesTo": "engines/null.c",
+      "type": "launch"
+    }
+  ]
+}

@@ -1,11 +1,10 @@
 [global]
 bs=4k
-gtod_reduce=1
 
 [null]
 ioengine=cpp_null
-size=100g
-rw=randread
-iodepth=128
+size=10g
+rw=write
+iodepth=1
 norandommap
 time_based
